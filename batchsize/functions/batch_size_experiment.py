@@ -32,7 +32,9 @@ def set_seed(seed=42):
 
 import argparse
 
-def run_batch_size_experiments(batch_sizes=None, num_epochs=5, device=None, project_root=None, model_name='resnet50', train_ds=None, val_ds=None, save_dir=None, log_dir=None):
+from logger import get_logger
+
+def run_batch_size_experiments(image_path, batch_sizes=None, num_epochs=5, device=None, project_root=None, model_name='resnet50', train_ds=None, val_ds=None, save_dir=None, log_dir=None):
     # Configuration
     # NOTE: Please verify these paths match your environment
     PROJECT_ROOT = project_root if project_root else current_dir
@@ -75,6 +77,23 @@ def run_batch_size_experiments(batch_sizes=None, num_epochs=5, device=None, proj
 
             save_path = os.path.join(current_save_dir, f'{model_name}_bs{bs}.pth')
             log_path = os.path.join(current_log_dir, f'{model_name}_bs{bs}.log')
+            
+            # Initialize logger and log dataset stats
+            logger = get_logger(log_path)
+            
+            def log_dataset_stats(ds, name):
+                try:
+                    size = len(ds)
+                    logger.info(f"{name} Dataset Size: {size}")
+                    if hasattr(ds, 'data') and 'projection' in ds.data.columns:
+                        ap_count = len(ds.data[ds.data['projection'] == 'AP'])
+                        pa_count = len(ds.data[ds.data['projection'] == 'PA'])
+                        logger.info(f"{name} Dataset Stats: AP={ap_count}, PA={pa_count}")
+                except Exception as e:
+                    logger.warning(f"Could not log stats for {name}: {e}")
+
+            log_dataset_stats(train_ds, "Train")
+            log_dataset_stats(val_ds, "Val")
 
             # Train
             train_losses, train_accs, val_losses, val_accs = train(
@@ -114,6 +133,10 @@ def run_batch_size_experiments(batch_sizes=None, num_epochs=5, device=None, proj
                 print(f"Memory cleared after BS {bs}: {cleared_mb:.2f} MB.")
             else:
                 print(f"Memory cleared after BS {bs}.")
+    
+    print("\n--- Final Results ---")
+    for bs, res in results.items():
+        print(f"Batch Size {bs}: {res}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run Batch Size Experiments for COVIDCXNet")
