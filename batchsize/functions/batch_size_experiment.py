@@ -137,6 +137,8 @@ def run_batch_size_experiments(image_path, batch_sizes=None, num_epochs=5, devic
     print("\n--- Final Results ---")
     for bs, res in results.items():
         print(f"Batch Size {bs}: {res}")
+    
+    return results
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run Batch Size Experiments for COVIDCXNet")
