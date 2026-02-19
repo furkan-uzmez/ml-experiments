@@ -58,37 +58,27 @@ def run_sample_experiment(image_path, batch_sizes=None, sample_train_size=2000, 
                              std=[0.229, 0.224, 0.225])
     ])
 
-    # Load Full Dataset (for splitting intro sample)
-    # Note: Using verbose=False to keep logs clean during setup if possible, assuming user added verbose param previously.
-    # If verbose param was added as 'verbose=True' default, we can pass False.
-    try:
-        full_dataset = COVIDCXNetDataset(csv_file=TRAIN_CSV, root_dir=ROOT_DATA_DIR, transform=transform, split='train', verbose=False)
-    except TypeError:
-         # Fallback if verbose param not yet approved/merged in dataset.py on disk (though I saw user edits)
-        full_dataset = COVIDCXNetDataset(csv_file=TRAIN_CSV, root_dir=ROOT_DATA_DIR, transform=transform, split='train')
-
-    # Create Sample Subsets
-    indices = list(range(len(full_dataset)))
-    # Shuffle indices securely
-    np.random.seed(seed)
-    np.random.shuffle(indices)
-
-    # Handle 'full' size
-    if sample_train_size == 'full':
-        actual_train_size = len(indices)
-    else:
-        actual_train_size = min(int(sample_train_size), len(indices))
-        
-    if sample_val_size == 'full':
-        actual_val_size = len(indices) - actual_train_size
-    else:
-        actual_val_size = min(int(sample_val_size), len(indices) - actual_train_size)
+    # Load Train and Val Datasets
+    # If size is 'full', use the respective split directly. 
+    # Otherwise, take a random subset of that split.
     
-    sample_train_indices = indices[:actual_train_size]
-    sample_val_indices = indices[actual_train_size : actual_train_size + actual_val_size]
+    train_dataset = COVIDCXNetDataset(csv_file=TRAIN_CSV, root_dir=ROOT_DATA_DIR, transform=transform, split='train')
+    if sample_train_size == 'full':
+        train_subset = train_dataset
+    else:
+        indices_train = list(range(len(train_dataset)))
+        np.random.seed(seed)
+        np.random.shuffle(indices_train)
+        train_subset = Subset(train_dataset, indices_train[:min(int(sample_train_size), len(indices_train))])
 
-    train_subset = Subset(full_dataset, sample_train_indices)
-    val_subset = Subset(full_dataset, sample_val_indices)
+    val_dataset = COVIDCXNetDataset(csv_file=TRAIN_CSV, root_dir=ROOT_DATA_DIR, transform=transform, split='val')
+    if sample_val_size == 'full':
+        val_subset = val_dataset
+    else:
+        indices_val = list(range(len(val_dataset)))
+        np.random.seed(seed)
+        np.random.shuffle(indices_val)
+        val_subset = Subset(val_dataset, indices_val[:min(int(sample_val_size), len(indices_val))])
 
     print(f"Sample Train Size: {len(train_subset)}")
     print(f"Sample Val Size: {len(val_subset)}")
