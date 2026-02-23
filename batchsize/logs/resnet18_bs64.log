@@ -1,0 +1,31 @@
+[2026_02_21_22_11_17] Train Dataset Size: 53691
+[2026_02_21_22_11_17] Train Dataset Stats: AP=33303, PA=20388
+[2026_02_21_22_11_17] Val Dataset Size: 4186
+[2026_02_21_22_11_17] Val Dataset Stats: AP=2911, PA=1275
+[2026_02_21_22_11_17] Training started.
+[2026_02_21_22_13_07] Epoch [1/5]
+[2026_02_21_22_13_07]   Train Loss: 0.1035, Train Acc: 0.9658
+[2026_02_21_22_13_07]   Val   Loss: 0.1163, Val   Acc: 0.9615
+[2026_02_21_22_13_07]   Best model saved with val_loss: 0.1163
+[2026_02_21_22_14_57] Epoch [2/5]
+[2026_02_21_22_14_57]   Train Loss: 0.0591, Train Acc: 0.9810
+[2026_02_21_22_14_57]   Val   Loss: 0.1112, Val   Acc: 0.9649
+[2026_02_21_22_14_57]   Best model saved with val_loss: 0.1112
+[2026_02_21_22_16_47] Epoch [3/5]
+[2026_02_21_22_16_47]   Train Loss: 0.0438, Train Acc: 0.9854
+[2026_02_21_22_16_47]   Val   Loss: 0.1172, Val   Acc: 0.9639
+[2026_02_21_22_16_47]   No improvement. Early stopping counter: 1/3
+[2026_02_21_22_18_37] Epoch [4/5]
+[2026_02_21_22_18_37]   Train Loss: 0.0341, Train Acc: 0.9891
+[2026_02_21_22_18_37]   Val   Loss: 0.1179, Val   Acc: 0.9656
+[2026_02_21_22_18_37]   No improvement. Early stopping counter: 2/3
+[2026_02_21_22_20_27] Epoch [5/5]
+[2026_02_21_22_20_27]   Train Loss: 0.0277, Train Acc: 0.9909
+[2026_02_21_22_20_27]   Val   Loss: 0.1207, Val   Acc: 0.9654
+[2026_02_21_22_20_27]   No improvement. Early stopping counter: 3/3
+[2026_02_21_22_20_27]   Early stopping triggered. Training stopped.
+[2026_02_21_22_20_27] 
+========== BEST MODEL SUMMARY ==========
+[2026_02_21_22_20_27] Best Epoch      : 2
+[2026_02_21_22_20_27] Val Loss        : 0.1112
+[2026_02_21_22_20_27] ========================================

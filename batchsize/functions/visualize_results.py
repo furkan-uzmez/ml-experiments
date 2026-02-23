@@ -147,7 +147,7 @@ def visualize_batch_size_results(project_root, model_name='resnet50'):
                      bbox=dict(facecolor='white', alpha=0.7, edgecolor='none', pad=1),
                      fontsize=9, fontweight='bold', color='darkgreen')
 
-        plt.title('Best Accuracy vs Batch Size (Gaps Calculated Corrected)', fontsize=16)
+        plt.title(f'Best Accuracy vs Batch Size for {model_name}', fontsize=16)
         plt.xlabel('Batch Size', fontsize=12)
         plt.ylabel('Accuracy', fontsize=12)
         plt.xticks(x_positions, bs_labels)

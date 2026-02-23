@@ -69,7 +69,18 @@ def run_sample_experiment(image_path, batch_sizes=None, sample_train_size=2000, 
         indices_train = list(range(len(train_dataset)))
         np.random.seed(seed)
         np.random.shuffle(indices_train)
-        train_subset = Subset(train_dataset, indices_train[:min(int(sample_train_size), len(indices_train))])
+        
+        try:
+            train_size_val = float(sample_train_size)
+        except ValueError:
+            train_size_val = int(sample_train_size)
+            
+        if isinstance(train_size_val, float) and 0.0 < train_size_val < 1.0:
+            sample_train_size_int = int(len(train_dataset) * train_size_val)
+        else:
+            sample_train_size_int = min(int(train_size_val), len(indices_train))
+            
+        train_subset = Subset(train_dataset, indices_train[:sample_train_size_int])
 
     val_dataset = COVIDCXNetDataset(csv_file=TRAIN_CSV, root_dir=ROOT_DATA_DIR, transform=transform, split='val')
     if sample_val_size == 'full':
@@ -78,7 +89,18 @@ def run_sample_experiment(image_path, batch_sizes=None, sample_train_size=2000, 
         indices_val = list(range(len(val_dataset)))
         np.random.seed(seed)
         np.random.shuffle(indices_val)
-        val_subset = Subset(val_dataset, indices_val[:min(int(sample_val_size), len(indices_val))])
+        
+        try:
+            val_size_val = float(sample_val_size)
+        except ValueError:
+            val_size_val = int(sample_val_size)
+            
+        if isinstance(val_size_val, float) and 0.0 < val_size_val < 1.0:
+            sample_val_size_int = int(len(val_dataset) * val_size_val)
+        else:
+            sample_val_size_int = min(int(val_size_val), len(indices_val))
+            
+        val_subset = Subset(val_dataset, indices_val[:sample_val_size_int])
 
     print(f"Sample Train Size: {len(train_subset)}")
     print(f"Sample Val Size: {len(val_subset)}")
@@ -158,16 +180,17 @@ if __name__ == "__main__":
     parser.add_argument("--batch_sizes", type=int, nargs='+', help="Batch sizes to test")
     parser.add_argument("--model", type=str, default="resnet50", help="Model name")
     
-    def int_or_full(value):
+    def float_int_or_full(value):
         if value.lower() == 'full':
             return 'full'
         try:
-            return int(value)
+            val = float(value)
+            return int(val) if val.is_integer() else val
         except ValueError:
-            raise argparse.ArgumentTypeError(f"Value must be an integer or 'full', got '{value}'")
+            raise argparse.ArgumentTypeError(f"Value must be a number or 'full', got '{value}'")
 
-    parser.add_argument("--sample_train_size", type=int_or_full, default=2000, help="Number of training samples or 'full'")
-    parser.add_argument("--sample_val_size", type=int_or_full, default=500, help="Number of validation samples or 'full'")
+    parser.add_argument("--sample_train_size", type=float_int_or_full, default=2000, help="Number of training samples, fraction, or 'full'")
+    parser.add_argument("--sample_val_size", type=float_int_or_full, default=500, help="Number of validation samples, fraction, or 'full'")
     
     args = parser.parse_args()
     
