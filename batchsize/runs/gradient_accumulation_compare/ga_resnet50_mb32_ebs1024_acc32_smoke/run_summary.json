@@ -1,0 +1,9 @@
+{
+  "run_name": "ga_resnet50_mb32_ebs1024_acc32_smoke",
+  "num_epochs_completed": 1,
+  "accumulation_steps": 32,
+  "best_epoch": 1,
+  "best_val_loss": 0.6595778465270996,
+  "total_train_time_sec": 6.620187705004355,
+  "best_checkpoint_path": "/home/furkan/Projects/ML_Algorithms/batchsize/runs/gradient_accumulation_compare/ga_resnet50_mb32_ebs1024_acc32_smoke/best_model.pth"
+}
