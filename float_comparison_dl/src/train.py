@@ -1,19 +1,26 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.cuda.amp import GradScaler, autocast
+from torch.cuda.amp import GradScaler
+from torch import autocast
 from src.metrics import calculate_metrics
-from src.utils import EpochTimer, get_gpu_memory_usage, reset_memory_stats
+from src.utils import EpochTimer, get_gpu_memory_usage, reset_memory_stats, setup_logger
 import numpy as np
+from tqdm import tqdm
+import os
 
-def train_epoch(model, dataloader, criterion, optimizer, precision, scaler=None, device='cuda'):
+log_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "logs")
+logger = setup_logger(__name__, log_file=os.path.join(log_dir, "training.log"))
+
+def train_epoch(model, dataloader, criterion, optimizer, precision, scaler=None, device='cuda', epoch=1, total_epochs=1):
     model.train()
     running_loss = 0.0
     all_targets = []
     all_preds = []
     all_probs = []
 
-    for inputs, targets in dataloader:
+    pbar = tqdm(dataloader, desc=f"Epoch {epoch}/{total_epochs} [Train]")
+    for inputs, targets in pbar:
         inputs, targets = inputs.to(device), targets.to(device)
         optimizer.zero_grad()
 
@@ -55,14 +62,15 @@ def train_epoch(model, dataloader, criterion, optimizer, precision, scaler=None,
     return epoch_loss, metrics
 
 @torch.no_grad()
-def evaluate(model, dataloader, criterion, precision, device='cuda'):
+def evaluate(model, dataloader, criterion, precision, device='cuda', epoch=1, total_epochs=1):
     model.eval()
     running_loss = 0.0
     all_targets = []
     all_preds = []
     all_probs = []
 
-    for inputs, targets in dataloader:
+    pbar = tqdm(dataloader, desc=f"Epoch {epoch}/{total_epochs} [Eval]")
+    for inputs, targets in pbar:
         inputs, targets = inputs.to(device), targets.to(device)
 
         if precision == 'fp32':
@@ -108,8 +116,8 @@ def train_model(model, train_loader, val_loader, precision='fp32', epochs=5, lr=
     for epoch in range(epochs):
         timer.start()
         
-        train_loss, train_metrics = train_epoch(model, train_loader, criterion, optimizer, precision, scaler, device)
-        val_loss, val_metrics = evaluate(model, val_loader, criterion, precision, device)
+        train_loss, train_metrics = train_epoch(model, train_loader, criterion, optimizer, precision, scaler, device, epoch=epoch+1, total_epochs=epochs)
+        val_loss, val_metrics = evaluate(model, val_loader, criterion, precision, device, epoch=epoch+1, total_epochs=epochs)
         
         epoch_time = timer.stop()
         scheduler.step()
@@ -122,9 +130,9 @@ def train_model(model, train_loader, val_loader, precision='fp32', epochs=5, lr=
         history['val_f1'].append(val_metrics['f1_score'])
         history['epoch_times'].append(epoch_time)
         
-        print(f"Epoch {epoch+1}/{epochs} - Train Loss: {train_loss:.4f} - Val Loss: {val_loss:.4f} - Val AUC: {val_metrics['auc_roc']:.4f} - Time: {epoch_time:.2f}s")
+        logger.info(f"Epoch {epoch+1}/{epochs} - Train Loss: {train_loss:.4f} - Val Loss: {val_loss:.4f} - Val AUC: {val_metrics['auc_roc']:.4f} - Time: {epoch_time:.2f}s")
         
     peak_memory = get_gpu_memory_usage()
-    print(f"Peak GPU Memory for {precision}: {peak_memory:.2f} MB")
+    logger.info(f"Peak GPU Memory for {precision}: {peak_memory:.2f} MB")
     
     return model, history, peak_memory

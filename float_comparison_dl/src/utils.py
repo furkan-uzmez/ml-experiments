@@ -3,7 +3,33 @@ import random
 import numpy as np
 import os
 import time
+import logging
+import sys
 
+def setup_logger(name, log_file=None, level=logging.INFO):
+    """Sets up a logger with console and optional file output."""
+    logger = logging.getLogger(name)
+    logger.setLevel(level)
+    
+    if logger.hasHandlers():
+        return logger
+
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+    ch = logging.StreamHandler(sys.stdout)
+    ch.setLevel(level)
+    ch.setFormatter(formatter)
+    logger.addHandler(ch)
+
+    if log_file:
+        if os.path.dirname(log_file):
+            os.makedirs(os.path.dirname(log_file), exist_ok=True)
+        fh = logging.FileHandler(log_file)
+        fh.setLevel(level)
+        fh.setFormatter(formatter)
+        logger.addHandler(fh)
+
+    return logger
 def set_seed(seed=42):
     """Sets the seed for reproducibility."""
     random.seed(seed)
