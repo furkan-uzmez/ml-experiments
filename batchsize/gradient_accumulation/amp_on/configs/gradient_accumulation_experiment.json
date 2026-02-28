@@ -1,8 +1,8 @@
 {
   "seed": 42,
   "deterministic": true,
-  "data_csv_file": "/home/furkan/Documents/covidx/covidx_merged.csv",
-  "data_root_dir": "/home/furkan/Documents",
+  "data_csv_file": "E:/covidx/covidx_merged.csv",
+  "data_root_dir": "E:/",
   "val_split_candidates": [
     "val",
     "validation",

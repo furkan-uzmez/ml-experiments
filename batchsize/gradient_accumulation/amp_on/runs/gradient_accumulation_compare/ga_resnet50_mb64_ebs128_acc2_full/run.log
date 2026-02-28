@@ -1,0 +1,7 @@
+[2026-02-28 02:04:08] Run 'ga_resnet50_mb64_ebs128_acc2_full' started | epochs=5, accumulation_steps=2, amp=True
+[2026-02-28 02:06:39] Epoch 1/5 | train_loss=0.1186, train_acc=0.9583, val_loss=0.1204, val_acc=0.9625, epoch_time=121.66s, train_sps=441.33, peak_vram=3181.59MB
+[2026-02-28 02:08:23] Epoch 2/5 | train_loss=0.0591, train_acc=0.9825, val_loss=0.1100, val_acc=0.9646, epoch_time=98.65s, train_sps=544.28, peak_vram=3181.59MB
+[2026-02-28 02:10:07] Epoch 3/5 | train_loss=0.0465, train_acc=0.9859, val_loss=0.1085, val_acc=0.9658, epoch_time=97.41s, train_sps=551.18, peak_vram=3181.59MB
+[2026-02-28 02:11:50] Epoch 4/5 | train_loss=0.0376, train_acc=0.9882, val_loss=0.1086, val_acc=0.9670, epoch_time=97.82s, train_sps=548.88, peak_vram=3181.59MB
+[2026-02-28 02:13:35] Epoch 5/5 | train_loss=0.0320, train_acc=0.9894, val_loss=0.1320, val_acc=0.9644, epoch_time=97.86s, train_sps=548.67, peak_vram=3181.59MB
+[2026-02-28 02:13:35] Run 'ga_resnet50_mb64_ebs128_acc2_full' finished in 567.28s

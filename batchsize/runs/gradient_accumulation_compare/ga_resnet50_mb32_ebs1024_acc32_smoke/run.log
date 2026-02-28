@@ -1,3 +1,0 @@
-[2026-02-27 23:27:52] Run 'ga_resnet50_mb32_ebs1024_acc32_smoke' started | epochs=1, accumulation_steps=32, amp=True
-[2026-02-27 23:27:59] Epoch 1/1 | train_loss=0.6901, train_acc=0.5254, val_loss=0.6596, val_acc=0.6895, epoch_time=4.68s, train_sps=219.01, peak_vram=1626.20MB
-[2026-02-27 23:27:59] Run 'ga_resnet50_mb32_ebs1024_acc32_smoke' finished in 6.62s

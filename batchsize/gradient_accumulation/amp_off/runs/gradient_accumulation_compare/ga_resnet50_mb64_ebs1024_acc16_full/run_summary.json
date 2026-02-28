@@ -1,0 +1,9 @@
+{
+  "run_name": "ga_resnet50_mb64_ebs1024_acc16_full",
+  "num_epochs_completed": 5,
+  "accumulation_steps": 16,
+  "best_epoch": 3,
+  "best_val_loss": 0.1046114534440433,
+  "total_train_time_sec": 943.4513288999988,
+  "best_checkpoint_path": "D:\\Projects\\ML_Algorithms\\batchsize\\gradient_accumulation\\amp_off\\runs\\gradient_accumulation_compare\\ga_resnet50_mb64_ebs1024_acc16_full\\best_model.pth"
+}
