@@ -1,9 +1,0 @@
-{
-  "run_name": "standard_bs32_acc1",
-  "num_epochs_completed": 5,
-  "accumulation_steps": 1,
-  "best_epoch": 4,
-  "best_val_loss": 0.10216872903319053,
-  "total_train_time_sec": 643.4040210370003,
-  "best_checkpoint_path": "runs/standard_bs32_acc1/best_model.pth"
-}

@@ -1,0 +1,9 @@
+{
+  "run_name": "accum_bs8_acc4",
+  "num_epochs_completed": 4,
+  "accumulation_steps": 4,
+  "best_epoch": 1,
+  "best_val_loss": 0.11006337801565054,
+  "total_train_time_sec": 446.1721531000003,
+  "best_checkpoint_path": "runs\\accum_bs8_acc4\\best_model.pth"
+}

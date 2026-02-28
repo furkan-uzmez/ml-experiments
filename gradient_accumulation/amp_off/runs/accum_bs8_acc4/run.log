@@ -1,0 +1,7 @@
+[2026-02-28 05:43:04] Run 'accum_bs8_acc4' started | epochs=5, accumulation_steps=4, amp=False
+[2026-02-28 05:45:19] Epoch 1/5 | train_loss=0.1274, train_acc=0.9599, val_loss=0.1101, val_acc=0.9632, epoch_time=110.90s, train_sps=484.15, peak_vram=1360.04MB
+[2026-02-28 05:47:01] Epoch 2/5 | train_loss=0.0755, train_acc=0.9785, val_loss=0.1134, val_acc=0.9603, epoch_time=95.13s, train_sps=564.39, peak_vram=383.78MB
+[2026-02-28 05:48:43] Epoch 3/5 | train_loss=0.0642, train_acc=0.9820, val_loss=0.1328, val_acc=0.9568, epoch_time=97.33s, train_sps=551.67, peak_vram=383.78MB
+[2026-02-28 05:50:30] Epoch 4/5 | train_loss=0.0578, train_acc=0.9835, val_loss=0.1229, val_acc=0.9580, epoch_time=101.06s, train_sps=531.30, peak_vram=383.78MB
+[2026-02-28 05:50:30] Early stopping triggered at epoch 4 (patience=3).
+[2026-02-28 05:50:30] Run 'accum_bs8_acc4' finished in 446.17s

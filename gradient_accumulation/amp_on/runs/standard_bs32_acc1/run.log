@@ -1,0 +1,8 @@
+[2026-02-28 16:21:49] Run 'standard_bs32_acc1' started | epochs=5, accumulation_steps=1, amp=True
+[2026-02-28 16:24:07] Epoch 1/5 | train_loss=0.0995, train_acc=0.9686, val_loss=0.1119, val_acc=0.9670, epoch_time=110.47s, train_sps=486.00, peak_vram=678.17MB
+[2026-02-28 16:25:25] Epoch 2/5 | train_loss=0.0637, train_acc=0.9815, val_loss=0.1084, val_acc=0.9666, epoch_time=71.24s, train_sps=753.65, peak_vram=570.38MB
+[2026-02-28 16:26:33] Epoch 3/5 | train_loss=0.0565, train_acc=0.9829, val_loss=0.1183, val_acc=0.9611, epoch_time=63.70s, train_sps=842.94, peak_vram=570.38MB
+[2026-02-28 16:27:46] Epoch 4/5 | train_loss=0.0500, train_acc=0.9857, val_loss=0.1089, val_acc=0.9646, epoch_time=65.72s, train_sps=816.91, peak_vram=570.38MB
+[2026-02-28 16:28:56] Epoch 5/5 | train_loss=0.0445, train_acc=0.9869, val_loss=0.1087, val_acc=0.9701, epoch_time=66.01s, train_sps=813.34, peak_vram=570.38MB
+[2026-02-28 16:28:56] Early stopping triggered at epoch 5 (patience=3).
+[2026-02-28 16:28:56] Run 'standard_bs32_acc1' finished in 426.91s
