@@ -1,0 +1,43 @@
+# Dataset Configuration — ISIC 2018 Task 1
+# Lesion Boundary Segmentation Challenge
+
+dataset:
+  name: "ISIC2018_Task1"
+  description: "Skin Lesion Boundary Segmentation"
+  root_path: "/home/furkan/Projects/nnU-net/archive"
+
+  # Directory structure
+  images_dir: "ISIC2018_Task1-2_Training_Input"
+  masks_dir: "ISIC2018_Task1_Training_GroundTruth"
+  image_extension: ".jpg"
+  mask_extension: "_segmentation.png"
+
+  # Modality and dimensionality
+  modality: "dermoscopy"
+  dimensionality: "2D"
+  image_channels: 3  # RGB
+
+  # Label definitions
+  labels:
+    0: "background"
+    1: "lesion"
+  num_classes: 2
+  task_type: "binary_segmentation"
+
+  # Image properties (variable sizes in dataset)
+  variable_size: true
+  # Common resize target for training (models may choose differently)
+  target_size: [256, 256]
+
+  # Normalization
+  normalization: "per_image"  # normalize each image independently
+  # ImageNet mean/std for transfer learning models
+  imagenet_mean: [0.485, 0.456, 0.406]
+  imagenet_std: [0.229, 0.224, 0.225]
+
+  # Patient identifier
+  patient_id_field: "filename_stem"  # ISIC_XXXXXXX serves as patient ID
+  # Note: In ISIC 2018, each image is from a unique patient
+
+  # Split reference
+  split_file: "splits/primary_split.json"

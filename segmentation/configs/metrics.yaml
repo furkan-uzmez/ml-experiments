@@ -1,0 +1,45 @@
+# Metrics Configuration
+# All metrics computed in common evaluation space
+
+metrics:
+  # Primary metrics (required for all models)
+  primary:
+    - name: "dice"
+      full_name: "Dice Similarity Coefficient"
+      library: "medpy"
+      higher_is_better: true
+      
+    - name: "iou"
+      full_name: "Intersection over Union (Jaccard Index)"
+      library: "custom"  # 1 - computed from Dice
+      higher_is_better: true
+      
+    - name: "hd95"
+      full_name: "95th Percentile Hausdorff Distance"
+      library: "medpy"
+      higher_is_better: false
+      unit: "pixels"
+
+  # Operational metrics
+  operational:
+    - name: "inference_time"
+      full_name: "Inference Time per Case"
+      unit: "seconds"
+      higher_is_better: false
+      
+    - name: "peak_gpu_memory"
+      full_name: "Peak GPU Memory"
+      unit: "MB"
+      higher_is_better: false
+
+  # Aggregation
+  aggregation:
+    per_case: true
+    summary_stats: ["mean", "std", "median", "min", "max"]
+
+  # Edge case handling
+  edge_cases:
+    both_empty: 1.0       # Dice=1 when both prediction and GT are empty
+    pred_empty_gt_not: 0.0 # Dice=0 when prediction is empty but GT is not
+    gt_empty_pred_not: 0.0 # Dice=0 when GT is empty but prediction is not
+    hd95_empty: "NaN"      # HD95 is undefined for empty masks
