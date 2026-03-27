@@ -89,7 +89,7 @@
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | DATA-01..06 | Phase 1: Benchmark Contract & Data Split | ✅ Done |
-| EVAL-01..08 | Phase 2: Evaluation Scaffold | Pending |
+| EVAL-01..08 | Phase 2: Evaluation Scaffold | ✅ Done |
 | UNET-01..05 | Phase 3: U-Net Baseline Pipeline | Pending |
 | NNUNET-01..06 | Phase 4: nnU-Net Integration | Pending |
 | MEDSAM-01..05 | Phase 5: MedSAM Integration | Pending |
