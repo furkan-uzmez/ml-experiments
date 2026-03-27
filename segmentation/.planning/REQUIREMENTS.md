@@ -6,12 +6,12 @@
 
 ### Data & Split
 
-- [ ] **DATA-01**: Define dataset contract (root path, modality, target labels, spacing, normalization, dimensionality) in `configs/dataset.yaml`
-- [ ] **DATA-02**: Create deterministic patient-level train/validation/test split in `splits/primary_split.json`
-- [ ] **DATA-03**: Verify zero patient overlap across train/val/test sets (automated test)
-- [ ] **DATA-04**: Index all image-label pairs mapped to patient identifiers
-- [ ] **DATA-05**: Enforce same split across all model pipelines
-- [ ] **DATA-06**: Remove or avoid direct patient identifiers in benchmark artifacts
+- [x] **DATA-01**: Define dataset contract (root path, modality, target labels, spacing, normalization, dimensionality) in `configs/dataset.yaml`
+- [x] **DATA-02**: Create deterministic patient-level train/validation/test split in `splits/primary_split.json`
+- [x] **DATA-03**: Verify zero patient overlap across train/val/test sets (automated test)
+- [x] **DATA-04**: Index all image-label pairs mapped to patient identifiers
+- [x] **DATA-05**: Enforce same split across all model pipelines
+- [x] **DATA-06**: Remove or avoid direct patient identifiers in benchmark artifacts
 
 ### Evaluation
 
@@ -51,11 +51,11 @@
 
 ### Reproducibility
 
-- [ ] **REPRO-01**: Fix random seeds across PyTorch, NumPy, Python random, CUDA
+- [x] **REPRO-01**: Fix random seeds across PyTorch, NumPy, Python random, CUDA
 - [ ] **REPRO-02**: Use same class definitions and label mapping for all three models
 - [ ] **REPRO-03**: Store predictions for complete test set for all models
-- [ ] **REPRO-04**: Store configuration files externally (not hardcoded)
-- [ ] **REPRO-05**: Document benchmark protocol (fairness rules, execution policy, MedSAM prompt protocol)
+- [x] **REPRO-04**: Store configuration files externally (not hardcoded)
+- [x] **REPRO-05**: Document benchmark protocol (fairness rules, execution policy, MedSAM prompt protocol)
 
 ### Reporting
 
@@ -88,10 +88,11 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DATA-01..06 | Phase 1: Benchmark Contract & Data Split | Pending |
+| DATA-01..06 | Phase 1: Benchmark Contract & Data Split | ✅ Done |
 | EVAL-01..08 | Phase 2: Evaluation Scaffold | Pending |
 | UNET-01..05 | Phase 3: U-Net Baseline Pipeline | Pending |
 | NNUNET-01..06 | Phase 4: nnU-Net Integration | Pending |
 | MEDSAM-01..05 | Phase 5: MedSAM Integration | Pending |
-| REPRO-01..05 | Phase 1 + Phase 2 (cross-cutting) | Pending |
+| REPRO-01,04,05 | Phase 1: Benchmark Contract & Data Split | ✅ Done |
+| REPRO-02,03 | Phase 2+ (cross-cutting) | Pending |
 | REPORT-01..05 | Phase 6: Results Aggregation & Report | Pending |
