@@ -40,12 +40,15 @@ Fair, reproducible comparison of three segmentation models on the same dataset w
 
 ## Context
 
-- **Domain**: Medical image segmentation (modality TBD based on dataset)
-- **Models**: U-Net (supervised baseline), nnU-Net (automated strong baseline), MedSAM (foundation model)
+- **Domain**: 2D medical image segmentation — skin lesion segmentation
+- **Dataset**: ISIC 2018 Task 1 (Lesion Boundary Segmentation) — ~2594 dermoscopy images with binary masks
+- **Modality**: Dermoscopy (2D RGB images)
+- **Task**: Binary segmentation (lesion vs background)
+- **Models**: U-Net (supervised baseline), nnU-Net 2D trainer (automated strong baseline), MedSAM (foundation model)
 - **Evaluation**: Shared evaluation pipeline with Dice, IoU, HD95, latency, and peak GPU memory
 - **Seeds**: Fixed seed list [11, 22, 33] for reproducible runs
 - **Fairness**: Enforced at data split and evaluation protocol layers, not by forcing identical internal pipelines
-- **MedSAM prompts**: Must be deterministic and documented
+- **MedSAM prompts**: Bounding box prompts derived deterministically from ground-truth masks
 
 ## Constraints
 
@@ -83,4 +86,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-27 after initialization*
+*Last updated: 2026-03-27 after ISIC 2018 dataset selection and requirements approval*
