@@ -88,10 +88,10 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DATA-01..06 | TBD | Pending |
-| EVAL-01..08 | TBD | Pending |
-| UNET-01..05 | TBD | Pending |
-| NNUNET-01..06 | TBD | Pending |
-| MEDSAM-01..05 | TBD | Pending |
-| REPRO-01..05 | TBD | Pending |
-| REPORT-01..05 | TBD | Pending |
+| DATA-01..06 | Phase 1: Benchmark Contract & Data Split | Pending |
+| EVAL-01..08 | Phase 2: Evaluation Scaffold | Pending |
+| UNET-01..05 | Phase 3: U-Net Baseline Pipeline | Pending |
+| NNUNET-01..06 | Phase 4: nnU-Net Integration | Pending |
+| MEDSAM-01..05 | Phase 5: MedSAM Integration | Pending |
+| REPRO-01..05 | Phase 1 + Phase 2 (cross-cutting) | Pending |
+| REPORT-01..05 | Phase 6: Results Aggregation & Report | Pending |
