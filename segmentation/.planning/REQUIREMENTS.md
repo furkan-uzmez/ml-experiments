@@ -95,4 +95,4 @@
 | MEDSAM-01..05 | Phase 5: MedSAM Integration | ✅ Done |
 | REPRO-01,04,05 | Phase 1: Benchmark Contract & Data Split | ✅ Done |
 | REPRO-02,03 | Phase 2+ (cross-cutting) | Pending |
-| REPORT-01..05 | Phase 6: Results Aggregation & Report | Pending |
+| REPORT-01..05 | Phase 6: Results Aggregation & Report | ✅ Done |
