@@ -1,0 +1,14 @@
+# Random Seeds Configuration
+# Used for all stochastic operations: training, augmentation, splitting
+
+seeds:
+  training_runs: [11, 22, 33]
+  split_seed: 42  # Used for deterministic train/val/test split
+  
+  # Framework-level seed setting
+  set_torch: true
+  set_numpy: true
+  set_python_random: true
+  set_cuda_deterministic: true
+  cudnn_deterministic: true
+  cudnn_benchmark: false  # Disabled for full reproducibility

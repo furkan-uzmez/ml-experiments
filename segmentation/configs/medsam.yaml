@@ -1,0 +1,22 @@
+# MedSAM Integration Configuration — ISIC 2018 Task 1
+
+model:
+  type: "vit_b"
+  checkpoint_dir: "artifacts/medsam/weights"
+  checkpoint_name: "medsam_vit_b.pth"
+  # URL to download the official MedSAM weights if missing
+  download_url: "https://github.com/bowang-lab/MedSAM/releases/download/v1.0/medsam_vit_b.pth"
+
+prompting:
+  # The padding added to the ground truth bounding box (in pixels)
+  # This simulates a loose human bounding box annotation.
+  bbox_padding: 5
+  
+  # For masks that have multiple disconnected components,
+  # do we extract one box per component, or one large macro bounding box?
+  # Strategy: 'macro' (one large box) vs 'connected_components'
+  strategy: "macro"
+
+inference:
+  output_dir: "artifacts/medsam/predictions"
+  batch_size: 1  # SAM handles variable image resolutions natively best with batch size 1
