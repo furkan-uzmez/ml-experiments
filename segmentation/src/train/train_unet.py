@@ -100,10 +100,12 @@ def train_unet(seed: int) -> None:
     best_val_dice = -1.0
     epochs = train_cfg['epochs']
     
-    # Initialize CSV Log
-    log_file = os.path.join(save_dir, "training_log.csv")
+    # Initialize Logger
+    log_file = os.path.join(save_dir, "training_log.log")
     with open(log_file, "w") as f:
-        f.write("epoch,train_loss,val_loss,val_dice\\n")
+        f.write("=== U-Net Benchmark Training Log ===\\n")
+        f.write(f"Seed: {seed}\\n")
+        f.write("------------------------------------\\n")
     
     for epoch in range(epochs):
         model.train()
@@ -154,11 +156,12 @@ def train_unet(seed: int) -> None:
         val_loss /= len(val_loader)
         avg_val_dice = val_dice_sum / len(val_ds)
         
-        # Save to CSV log
+        # Save to plain text log
+        log_line = f"Epoch {epoch+1:03d}/{epochs:03d} | Train Loss: {train_loss:.4f} | Val Loss: {val_loss:.4f} | Val Dice: {avg_val_dice:.4f}"
         with open(log_file, "a") as f:
-            f.write(f"{epoch+1},{train_loss:.4f},{val_loss:.4f},{avg_val_dice:.4f}\\n")
+            f.write(log_line + "\\n")
             
-        print(f"Epoch {epoch+1}/{epochs} | Train Loss: {train_loss:.4f} | Val Loss: {val_loss:.4f} | Val Dice: {avg_val_dice:.4f}")
+        print(log_line)
         
         # Model Selection
         if avg_val_dice > best_val_dice:
