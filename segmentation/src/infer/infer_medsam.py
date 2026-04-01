@@ -1,9 +1,10 @@
+import json
 import os
 import sys
-import yaml
-import json
-import torch
+
 import numpy as np
+import torch
+import yaml
 from PIL import Image
 import SimpleITK as sitk
 from tqdm import tqdm
@@ -16,6 +17,8 @@ from src.dataio.dataset_index import DatasetIndex
 from src.dataio.split_loader import SplitLoader
 from src.evaluation.metrics import compute_metrics
 from src.evaluation.runtime import track_inference_time, track_peak_gpu_memory
+from src.reporting.io_utils import write_jsonl_log
+from src.reporting.reporting_contract import RUNTIME_LOG_FILENAME
 
 # Track logic encapsulated purely for the predictor portion
 @track_peak_gpu_memory
@@ -24,7 +27,6 @@ def tracked_predict(model, bbox):
     """Executes the zero-shot prompting decoupled from metric/IO logic."""
     predicted_mask = model.predict(bbox)
     return {"mask": predicted_mask}
-
 
 def infer_medsam():
     """Main MedSAM inference loop evaluating over the test split.
@@ -59,10 +61,12 @@ def infer_medsam():
     
     # 3. Tracking Storage
     results = {}
-    dice_sum, iou_sum, hd95_sum = 0.0, 0.0, 0.0
+    dice_sum, iou_sum, hd95_sum, assd_sum = 0.0, 0.0, 0.0, 0.0
     valid_hd95_count = 0
+    valid_assd_count = 0
     inference_times = []
     peak_memories = []
+    runtime_rows: list[dict] = []
     
     # 4. Evaluation Loop
     pbar = tqdm(test_ids, desc="Evaluating Test Split")
@@ -93,6 +97,14 @@ def infer_medsam():
             metrics = compute_metrics(np.zeros_like(gt_mask), gt_mask)
             inference_times.append(0.0)
             peak_memories.append(0.0)
+            runtime_rows.append(
+                {
+                    "run_id": "medsam_zero_shot",
+                    "case_id": pid,
+                    "inference_time_seconds": 0.0,
+                    "peak_gpu_memory_mb": 0.0,
+                }
+            )
             final_pred_np = np.zeros_like(gt_mask)
         else:
             # Zero-Shot Processing via MedSAM
@@ -108,6 +120,14 @@ def infer_medsam():
             final_pred_np = track_result['mask'] # Returns boolean mask matched to original image np shape
             inference_times.append(track_result['inference_time_seconds'])
             peak_memories.append(track_result['peak_gpu_memory_mb'])
+            runtime_rows.append(
+                {
+                    "run_id": "medsam_zero_shot",
+                    "case_id": pid,
+                    "inference_time_seconds": track_result["inference_time_seconds"],
+                    "peak_gpu_memory_mb": track_result["peak_gpu_memory_mb"],
+                }
+            )
             
             # Compute Metrics
             metrics = compute_metrics(final_pred_np.astype(np.uint8), gt_mask)
@@ -119,6 +139,9 @@ def infer_medsam():
         if not np.isnan(metrics['hd95']):
             hd95_sum += metrics['hd95']
             valid_hd95_count += 1
+        if not np.isnan(metrics['assd']):
+            assd_sum += metrics['assd']
+            valid_assd_count += 1
             
         # Save output prediction image
         out_mask_path = os.path.join(out_dir, f"{pid}_pred.png")
@@ -131,13 +154,16 @@ def infer_medsam():
         avg_dice = dice_sum / num_eval
         avg_iou = iou_sum / num_eval
         avg_hd95 = hd95_sum / valid_hd95_count if valid_hd95_count > 0 else float('nan')
+        avg_assd = assd_sum / valid_assd_count if valid_assd_count > 0 else float('nan')
         avg_latency = float(np.mean(inference_times))
         max_mem = float(np.max(peak_memories))
+        write_jsonl_log(os.path.join(out_dir, RUNTIME_LOG_FILENAME), runtime_rows)
         
         print("\n=== MedSAM Evaluation Complete ===")
         print(f"Avg Dice:  {avg_dice:.4f}")
         print(f"Avg IoU:   {avg_iou:.4f}")
         print(f"Avg HD95:  {avg_hd95:.4f}")
+        print(f"Avg ASSD:  {avg_assd:.4f}")
         print(f"Avg Latency/Img: {avg_latency:.4f}s")
         print(f"Peak GPU Memory: {max_mem:.2f}MB")
         
@@ -147,6 +173,7 @@ def infer_medsam():
                     "avg_dice": avg_dice,
                     "avg_iou": avg_iou,
                     "avg_hd95": avg_hd95,
+                    "avg_assd": avg_assd,
                     "avg_latency": avg_latency,
                     "peak_gpu_mb": max_mem
                 },

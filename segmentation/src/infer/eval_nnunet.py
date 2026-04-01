@@ -11,6 +11,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../.
 from src.dataio.dataset_index import DatasetIndex
 from src.evaluation.metrics import compute_metrics
 from src.evaluation.resample import resample_to_reference
+from src.reporting.io_utils import write_json
 
 
 def eval_nnunet_predictions(pred_dir: str, seed: int):
@@ -24,10 +25,13 @@ def eval_nnunet_predictions(pred_dir: str, seed: int):
     print(f"Evaluating {len(pred_files)} predictions from {pred_dir} (Seed {seed})")
     
     results = {}
+    case_rows: list[dict] = []
     dice_sum = 0.0
     iou_sum = 0.0
     hd95_sum = 0.0
+    assd_sum = 0.0
     valid_hd95_count = 0
+    valid_assd_count = 0
     
     for pf in tqdm(pred_files):
         # Filename format: ISIC_xxxxxxx.png
@@ -52,11 +56,24 @@ def eval_nnunet_predictions(pred_dir: str, seed: int):
         metrics = compute_metrics(final_pred, final_gt)
         
         results[patient_id] = metrics
+        case_rows.append(
+            {
+                "run_id": f"nnunet_seed_{seed}",
+                "case_id": patient_id,
+                "dice": metrics["dice"],
+                "iou": metrics["iou"],
+                "hd95": metrics["hd95"],
+                "assd": metrics["assd"],
+            }
+        )
         dice_sum += metrics['dice']
         iou_sum += metrics['iou']
         if not np.isnan(metrics['hd95']):
             hd95_sum += metrics['hd95']
             valid_hd95_count += 1
+        if not np.isnan(metrics['assd']):
+            assd_sum += metrics['assd']
+            valid_assd_count += 1
             
     num_eval = len(results)
     if num_eval == 0:
@@ -66,12 +83,14 @@ def eval_nnunet_predictions(pred_dir: str, seed: int):
     avg_dice = dice_sum / num_eval
     avg_iou = iou_sum / num_eval
     avg_hd95 = hd95_sum / valid_hd95_count if valid_hd95_count > 0 else float('nan')
+    avg_assd = assd_sum / valid_assd_count if valid_assd_count > 0 else float('nan')
     
     print(f"--- Final Evaluation (Seed {seed}) ---")
     print(f"Cases Evaluated: {num_eval}")
     print(f"Avg Dice:  {avg_dice:.4f}")
     print(f"Avg IoU:   {avg_iou:.4f}")
     print(f"Avg HD95:  {avg_hd95:.4f}")
+    print(f"Avg ASSD:  {avg_assd:.4f}")
     
     # Save results to a json
     out_json = os.path.join(pred_dir, f"metrics_seed_{seed}.json")
@@ -80,10 +99,14 @@ def eval_nnunet_predictions(pred_dir: str, seed: int):
             "aggregate": {
                 "avg_dice": avg_dice,
                 "avg_iou": avg_iou,
-                "avg_hd95": avg_hd95
+                "avg_hd95": avg_hd95,
+                "avg_assd": avg_assd
             },
             "per_case": results
         }, f, indent=4)
+
+    out_case_json = os.path.join(pred_dir, f"case_metrics_seed_{seed}.json")
+    write_json(out_case_json, case_rows)
         
 
 if __name__ == "__main__":

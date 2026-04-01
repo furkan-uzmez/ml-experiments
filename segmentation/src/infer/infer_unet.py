@@ -1,8 +1,9 @@
 import os
 import sys
-import yaml
-import torch
+
 import numpy as np
+import torch
+import yaml
 from PIL import Image
 from tqdm import tqdm
 import argparse
@@ -15,6 +16,8 @@ from src.dataio.unet_dataset import create_datasets
 from src.dataio.dataset_index import DatasetIndex
 from src.evaluation.resample import resample_to_reference
 from src.evaluation.runtime import track_inference_time, track_peak_gpu_memory
+from src.reporting.io_utils import write_jsonl_log
+from src.reporting.reporting_contract import RUNTIME_LOG_FILENAME
 
 # For loading the original reference image dimensions during resampling
 import SimpleITK as sitk
@@ -72,6 +75,7 @@ def infer_unet(seed: int) -> None:
     # Tracking
     inference_times = []
     peak_memories = []
+    runtime_rows: list[dict] = []
     
     pbar = tqdm(test_loader, desc=f"Inference Seed {seed}")
     for batch_data in pbar:
@@ -88,6 +92,14 @@ def infer_unet(seed: int) -> None:
         # Tracking metrics collection
         inference_times.append(result['inference_time_seconds'])
         peak_memories.append(result['peak_gpu_memory_mb'])
+        runtime_rows.append(
+            {
+                "run_id": f"unet_seed_{seed}",
+                "case_id": patient_id,
+                "inference_time_seconds": result["inference_time_seconds"],
+                "peak_gpu_memory_mb": result["peak_gpu_memory_mb"],
+            }
+        )
         
         # Resampling
         if resample:
@@ -105,6 +117,8 @@ def infer_unet(seed: int) -> None:
         img = Image.fromarray(final_mask * 255, mode='L')
         save_path = os.path.join(out_dir, f"{patient_id}_segmentation.png")
         img.save(save_path)
+
+    write_jsonl_log(os.path.join(out_dir, RUNTIME_LOG_FILENAME), runtime_rows)
         
     avg_latency = float(np.mean(inference_times))
     max_memory = float(np.max(peak_memories))

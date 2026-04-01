@@ -1,7 +1,10 @@
+import json
 import os
 import sys
-import yaml
+from datetime import datetime
+
 import torch
+import yaml
 from torch.utils.data import DataLoader
 from monai.losses import DiceFocalLoss
 from tqdm import tqdm
@@ -12,6 +15,8 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../.
 from src.models.unet_model import create_unet_model
 from src.dataio.unet_dataset import create_datasets
 from src.evaluation.metrics import compute_metrics
+from src.reporting.io_utils import write_json
+from src.reporting.reporting_contract import TRAINING_HISTORY_FILENAME
 
 
 def set_deterministic_seeds(seed: int, config_path: str = "configs/seeds.yaml") -> None:
@@ -37,6 +42,10 @@ def set_deterministic_seeds(seed: int, config_path: str = "configs/seeds.yaml") 
                 torch.backends.cudnn.benchmark = False
 
 
+def compact_config_summary(config: dict) -> str:
+    return json.dumps(config, sort_keys=True, separators=(",", ":"))
+
+
 def train_unet(seed: int) -> None:
     """Trains a U-Net model from scratch for a single specified seed.
     
@@ -60,6 +69,9 @@ def train_unet(seed: int) -> None:
     save_dir = os.path.join(train_cfg['save_dir'], f"seed_{seed}")
     os.makedirs(save_dir, exist_ok=True)
     best_model_path = os.path.join(save_dir, "best_model.pth")
+    history_path = os.path.join(save_dir, TRAINING_HISTORY_FILENAME)
+    manifest_path = os.path.join(save_dir, "run_manifest.json")
+    train_started_at = datetime.utcnow().isoformat(timespec="seconds") + "Z"
     
     # 1. Dataset & DataLoader
     train_ds, val_ds, _ = create_datasets()
@@ -99,6 +111,7 @@ def train_unet(seed: int) -> None:
     # 3. Training Loop
     best_val_dice = -1.0
     epochs = train_cfg['epochs']
+    history_rows: list[dict] = []
     
     # Initialize Logger
     log_file = os.path.join(save_dir, "training_log.log")
@@ -160,6 +173,15 @@ def train_unet(seed: int) -> None:
         log_line = f"Epoch {epoch+1:03d}/{epochs:03d} | Train Loss: {train_loss:.4f} | Val Loss: {val_loss:.4f} | Val Dice: {avg_val_dice:.4f}"
         with open(log_file, "a") as f:
             f.write(log_line + "\\n")
+
+        history_rows.append(
+            {
+                "epoch": epoch + 1,
+                "train_loss": train_loss,
+                "val_loss": val_loss,
+                "val_dice": avg_val_dice,
+            }
+        )
             
         print(log_line)
         
@@ -168,6 +190,31 @@ def train_unet(seed: int) -> None:
             best_val_dice = avg_val_dice
             torch.save(model.state_dict(), best_model_path)
             print(f"Saved new best model with Val Dice: {best_val_dice:.4f}")
+
+    train_finished_at = datetime.utcnow().isoformat(timespec="seconds") + "Z"
+    write_json(history_path, history_rows)
+
+    run_manifest = {
+        "run_id": f"unet_seed_{seed}",
+        "model_name": "U-Net",
+        "backbone": config["model"].get("architecture", "BasicUNet"),
+        "seed": seed,
+        "loss_name": loss_cfg.get("name", "DiceFocalLoss"),
+        "optimizer": config.get("optimizer", {}).get("name", "AdamW"),
+        "learning_rate": train_cfg.get("learning_rate"),
+        "scheduler": train_cfg.get("scheduler", "none"),
+        "augmentation_summary": compact_config_summary(config.get("augmentation", {})),
+        "preprocessing_summary": compact_config_summary(config.get("preprocessing", {})),
+        "threshold_policy": "fixed_threshold@0.5",
+        "checkpoint_path": best_model_path,
+        "train_started_at": train_started_at,
+        "train_finished_at": train_finished_at,
+        "history_path": history_path,
+        "log_path": log_file,
+        "best_val_dice": best_val_dice,
+    }
+    with open(manifest_path, "w", encoding="utf-8") as handle:
+        json.dump(run_manifest, handle, indent=2)
 
     print(f"Training completed for Seed {seed}. Best Val Dice: {best_val_dice:.4f}")
 
