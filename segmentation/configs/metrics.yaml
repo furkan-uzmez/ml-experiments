@@ -20,6 +20,12 @@ metrics:
       higher_is_better: false
       unit: "pixels"
 
+    - name: "assd"
+      full_name: "Average Symmetric Surface Distance"
+      library: "medpy"
+      higher_is_better: false
+      unit: "pixels"
+
   # Operational metrics
   operational:
     - name: "inference_time"
@@ -35,6 +41,12 @@ metrics:
   # Aggregation
   aggregation:
     per_case: true
+    case_level_contract:
+      - "run metadata"
+      - "threshold policy"
+      - "lesion counts"
+      - "foreground volumes"
+      - "inference runtime when available"
     summary_stats: ["mean", "std", "median", "min", "max"]
 
   # Edge case handling
@@ -43,3 +55,4 @@ metrics:
     pred_empty_gt_not: 0.0 # Dice=0 when prediction is empty but GT is not
     gt_empty_pred_not: 0.0 # Dice=0 when GT is empty but prediction is not
     hd95_empty: "NaN"      # HD95 is undefined for empty masks
+    assd_empty: "NaN"      # ASSD is undefined for empty masks

@@ -1,0 +1,61 @@
+# U-Net Baseline Configuration — ISIC 2018 Task 1
+
+model:
+  name: "BasicUNet"
+  architecture: "monai.networks.nets.BasicUNet"
+  spatial_dims: 2
+  in_channels: 3
+  out_channels: 1
+  features: [32, 32, 64, 128, 256, 32]
+  dropout: 0.1
+
+training:
+  batch_size: 16
+  epochs: 50
+  learning_rate: 0.0001
+  weight_decay: 1e-5
+  num_workers: 8
+  
+  # Checkpointing
+  save_dir: "artifacts/unet/checkpoints"
+  save_best_only: true
+  metric_to_monitor: "val_dice"
+
+loss:
+  name: "DiceFocalLoss"
+  include_background: false
+  sigmoid: true  # Apply sigmoid activation to predictions
+  squared_pred: true
+  
+optimizer:
+  name: "AdamW"
+
+preprocessing:
+  # All images resized to a uniform square for baseline U-Net
+  target_size: [256, 256]
+  
+  # ImageNet normalization parameters
+  mean: [0.485, 0.456, 0.406]
+  std: [0.229, 0.224, 0.225]
+
+augmentation:
+  # MONAI Rand transforms
+  rand_rotate:
+    prob: 0.5
+    range_x: 0.261  # ~15 degrees in radians
+  rand_flip_h:
+    prob: 0.5
+  rand_flip_v:
+    prob: 0.5
+  rand_zoom:
+    prob: 0.3
+    min_zoom: 0.9
+    max_zoom: 1.1
+
+inference:
+  # Where to save raw binary masks
+  output_dir: "artifacts/unet/predictions"
+  batch_size: 16
+  # Resample predicted mask back to native size before saving?
+  # Yes, to comply with the benchmark evaluation space rules.
+  resample_to_native: true
