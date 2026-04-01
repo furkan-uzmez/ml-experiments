@@ -84,16 +84,20 @@ artifacts/
 │       ├── seed_22/
 │       └── seed_33/
 └── summary/
-    ├── model_comparison.csv
-    ├── run_registry.json
+    ├── case_metrics.json
+    ├── model_case_metrics.json
+    ├── model_summary.json
+    ├── run_summary.json
+    ├── run_inventory.json
     └── figures/
 ```
 
 ### Reporting Format
-- Per-case metrics in CSV
-- Summary table with mean ± std for each metric per model
-- Boxplots comparing distributions across models
-- Final narrative report in markdown
+- Per-case metrics in JSON with run metadata, threshold policy, lesion counts, and foreground volumes
+- Summary tables serialized as JSON at both run level and model level
+- Distribution plots for Dice plus boundary metrics (HD95 and ASSD)
+- Qualitative overlay gallery for best, median, and worst cases
+- Final narrative report in markdown following the medical experiment reporting template
 
 ## Version Control
 - All configurations committed to git before any training
