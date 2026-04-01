@@ -1,11 +1,11 @@
 import json
 import os
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 
 import torch
 import yaml
-from torch.utils.data import DataLoader
+from monai.data import DataLoader
 from monai.losses import DiceFocalLoss
 from tqdm import tqdm
 import argparse
@@ -23,6 +23,9 @@ def set_deterministic_seeds(seed: int, config_path: str = "configs/seeds.yaml") 
     """Sets random seeds across Python, NumPy, and PyTorch for reproducibility."""
     import random
     import numpy as np
+    from monai.utils import set_determinism
+    
+    set_determinism(seed=seed)
     
     with open(config_path, 'r', encoding='utf-8') as f:
         cfg = yaml.safe_load(f)['seeds']
@@ -71,12 +74,12 @@ def train_unet(seed: int) -> None:
     best_model_path = os.path.join(save_dir, "best_model.pth")
     history_path = os.path.join(save_dir, TRAINING_HISTORY_FILENAME)
     manifest_path = os.path.join(save_dir, "run_manifest.json")
-    train_started_at = datetime.utcnow().isoformat(timespec="seconds") + "Z"
+    train_started_at = datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
     
     # 1. Dataset & DataLoader
     train_ds, val_ds, _ = create_datasets()
     
-    # Use standard PyTorch DataLoader; MONAI Dataset inherits from standard PyTorch
+    # Use MONAI DataLoader to ensure deterministic seeds across multiprocessing workers
     train_loader = DataLoader(
         train_ds, 
         batch_size=train_cfg['batch_size'], 
@@ -104,8 +107,8 @@ def train_unet(seed: int) -> None:
     
     optimizer = torch.optim.AdamW(
         model.parameters(), 
-        lr=train_cfg['learning_rate'], 
-        weight_decay=train_cfg.get('weight_decay', 1e-5)
+        lr=float(train_cfg['learning_rate']), 
+        weight_decay=float(train_cfg.get('weight_decay', 1e-5))
     )
     
     # 3. Training Loop
@@ -116,9 +119,9 @@ def train_unet(seed: int) -> None:
     # Initialize Logger
     log_file = os.path.join(save_dir, "training_log.log")
     with open(log_file, "w") as f:
-        f.write("=== U-Net Benchmark Training Log ===\\n")
-        f.write(f"Seed: {seed}\\n")
-        f.write("------------------------------------\\n")
+        f.write("=== U-Net Benchmark Training Log ===\n")
+        f.write(f"Seed: {seed}\n")
+        f.write("------------------------------------\n")
     
     for epoch in range(epochs):
         model.train()
@@ -172,7 +175,7 @@ def train_unet(seed: int) -> None:
         # Save to plain text log
         log_line = f"Epoch {epoch+1:03d}/{epochs:03d} | Train Loss: {train_loss:.4f} | Val Loss: {val_loss:.4f} | Val Dice: {avg_val_dice:.4f}"
         with open(log_file, "a") as f:
-            f.write(log_line + "\\n")
+            f.write(log_line + "\n")
 
         history_rows.append(
             {
@@ -191,7 +194,7 @@ def train_unet(seed: int) -> None:
             torch.save(model.state_dict(), best_model_path)
             print(f"Saved new best model with Val Dice: {best_val_dice:.4f}")
 
-    train_finished_at = datetime.utcnow().isoformat(timespec="seconds") + "Z"
+    train_finished_at = datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
     write_json(history_path, history_rows)
 
     run_manifest = {
