@@ -21,6 +21,7 @@ def test_compute_metrics_perfect_match():
     assert np.isclose(metrics['dice'], 1.0)
     assert np.isclose(metrics['iou'], 1.0)
     assert np.isclose(metrics['hd95'], 0.0)
+    assert np.isclose(metrics['assd'], 0.0)
 
 
 def test_compute_metrics_no_overlap():
@@ -35,6 +36,7 @@ def test_compute_metrics_no_overlap():
     assert np.isclose(metrics['dice'], 0.0)
     assert np.isclose(metrics['iou'], 0.0)
     assert metrics['hd95'] > 10.0  # HD95 should be large
+    assert metrics['assd'] > 10.0
 
 
 def test_compute_metrics_half_overlap():
@@ -55,6 +57,7 @@ def test_compute_metrics_half_overlap():
     assert np.isclose(metrics['dice'], 2/3)
     assert np.isclose(metrics['iou'], 0.5)
     assert metrics['hd95'] > 0.0
+    assert metrics['assd'] > 0.0
 
 
 def test_compute_metrics_both_empty():
@@ -65,6 +68,7 @@ def test_compute_metrics_both_empty():
     assert np.isclose(metrics['dice'], 1.0)
     assert np.isclose(metrics['iou'], 1.0)
     assert math.isnan(metrics['hd95'])
+    assert math.isnan(metrics['assd'])
 
 
 def test_compute_metrics_pred_empty():
@@ -76,6 +80,7 @@ def test_compute_metrics_pred_empty():
     assert np.isclose(metrics['dice'], 0.0)
     assert np.isclose(metrics['iou'], 0.0)
     assert math.isnan(metrics['hd95'])
+    assert math.isnan(metrics['assd'])
 
 
 def test_compute_metrics_gt_empty():
@@ -87,6 +92,7 @@ def test_compute_metrics_gt_empty():
     assert np.isclose(metrics['dice'], 0.0)
     assert np.isclose(metrics['iou'], 0.0)
     assert math.isnan(metrics['hd95'])
+    assert math.isnan(metrics['assd'])
 
 
 def test_compute_metrics_shape_mismatch():
