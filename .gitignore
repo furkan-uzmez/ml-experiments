@@ -4,3 +4,5 @@ archive
 .agent
 commit_history
 *.pth
+__pycache__
+predictions
