@@ -1,22 +1,29 @@
-# MedSAM Integration Configuration — ISIC 2018 Task 1
+# MedSAM3 Integration Configuration — ISIC 2018 Task 1
+
+mode: "zero_shot"
 
 model:
-  type: "vit_b"
-  checkpoint_dir: "artifacts/medsam/weights"
-  checkpoint_name: "medsam_vit_b.pth"
-  # URL to download the official MedSAM weights if missing
-  download_url: "https://github.com/bowang-lab/MedSAM/releases/download/v1.0/medsam_vit_b.pth"
+  display_name: "MedSAM3"
+  backbone: "SAM3 + MedSAM3 LoRA v1"
+  run_id_prefix: "medsam3"
+  repo_url: "https://github.com/Joey-S-Liu/MedSAM3"
+  repo_path: "external/MedSAM3"
+  config_path: "configs/full_lora_config.yaml"
+  weights_path: "weights/medsam3_v1/best_lora_weights.pt"
+  base_checkpoint_path: null
+  load_from_hf: true
+  resolution: 1008
+  detection_threshold: 0.5
+  nms_iou_threshold: 0.5
+  mask_threshold: 0.5
 
 prompting:
-  # The padding added to the ground truth bounding box (in pixels)
-  # This simulates a loose human bounding box annotation.
-  bbox_padding: 5
-  
-  # For masks that have multiple disconnected components,
-  # do we extract one box per component, or one large macro bounding box?
-  # Strategy: 'macro' (one large box) vs 'connected_components'
-  strategy: "macro"
+  strategy: "text"
+  text_prompts:
+    - "skin lesion"
+    - "lesion"
+  default_prompt: "lesion"
 
 inference:
-  output_dir: "artifacts/medsam/predictions"
-  batch_size: 1  # SAM handles variable image resolutions natively best with batch size 1
+  output_dir: "artifacts/medsam3/predictions"
+  batch_size: 1

@@ -3,7 +3,6 @@ import os
 import sys
 
 import numpy as np
-import torch
 import yaml
 from PIL import Image
 import SimpleITK as sitk
@@ -11,8 +10,7 @@ from tqdm import tqdm
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
-from src.models.medsam_model import MedSAMModel
-from src.infer.prompt_generator import PromptGenerator
+from src.models.medsam3_model import MedSAM3Model
 from src.dataio.dataset_index import DatasetIndex
 from src.dataio.split_loader import SplitLoader
 from src.evaluation.metrics import compute_metrics
@@ -20,46 +18,35 @@ from src.evaluation.runtime import track_inference_time, track_peak_gpu_memory
 from src.reporting.io_utils import write_jsonl_log
 from src.reporting.reporting_contract import RUNTIME_LOG_FILENAME
 
-# Track logic encapsulated purely for the predictor portion
 @track_peak_gpu_memory
 @track_inference_time
-def tracked_predict(model, bbox):
-    """Executes the zero-shot prompting decoupled from metric/IO logic."""
-    predicted_mask = model.predict(bbox)
+def tracked_predict(model, image_path):
+    """Execute MedSAM3 inference while keeping runtime tracking isolated."""
+    predicted_mask = model.predict(image_path)
     return {"mask": predicted_mask}
 
 def infer_medsam():
-    """Main MedSAM inference loop evaluating over the test split.
-    
-    1. Instantiates MedSAM Model.
-    2. Constructs deterministic prompts via Ground Truth tests.
-    3. Runs MedSAM Inference on embeddings, tracks resource consumption.
-    4. Evaluates predictions physically matched against original sets.
+    """Run the MedSAM3 benchmark inference loop over the test split.
+
+    MedSAM3 is text-guided, so inference is driven by the configured concept
+    prompts instead of ground-truth-derived bounding boxes.
     """
-    
-    # 1. Configs & Directories
     with open("configs/medsam.yaml", "r") as f:
         config = yaml.safe_load(f)
-        
+
     out_dir = config["inference"]["output_dir"]
     os.makedirs(out_dir, exist_ok=True)
-    
-    print("--- Starting MedSAM Benchmark Inference ---")
-    
-    # 2. Modules
-    # We enforce device auto-detect logic within MedSAMModel wrapper
-    model = MedSAMModel(config=config['model'], device='cuda')
-    
-    prompter = PromptGenerator(
-        padding=config['prompting'].get('bbox_padding', 5),
-        strategy=config['prompting'].get('strategy', 'macro')
-    )
-    
+
+    print("--- Starting MedSAM3 Benchmark Inference ---")
+
+    model_config = dict(config["model"])
+    model_config.update(config.get("prompting", {}))
+    model = MedSAM3Model(config=model_config, device="cuda")
+
     index = DatasetIndex()
     split_loader = SplitLoader()
     test_ids = split_loader.get_test_ids()
-    
-    # 3. Tracking Storage
+
     results = {}
     dice_sum, iou_sum, hd95_sum, assd_sum = 0.0, 0.0, 0.0, 0.0
     valid_hd95_count = 0
@@ -67,72 +54,33 @@ def infer_medsam():
     inference_times = []
     peak_memories = []
     runtime_rows: list[dict] = []
-    
-    # 4. Evaluation Loop
+
     pbar = tqdm(test_ids, desc="Evaluating Test Split")
     for pid in pbar:
         case = index.get_case(pid)
-        
-        # Read Original Components
+
         try:
-            pil_img = Image.open(case['image_path']).convert('RGB')
-            img_np = np.array(pil_img)
-            
             mask_img = sitk.ReadImage(case['mask_path'])
             mask_np = sitk.GetArrayFromImage(mask_img)
-            # Threshold boolean 
             gt_mask = (mask_np > 0).astype(np.uint8)
-            
         except FileNotFoundError:
             print(f"Skipping {pid} - Missing Image/Label.")
             continue
-            
-        # Extract Prompt
-        bbox = prompter.generate_bbox(gt_mask)
-        if bbox is None:
-            # MedSAM officially requires a bounding box prompt. 
-            # If the gt_mask is fully empty, a box prompt is impossible.
-            # To handle this benchmark edge-case fairly:
-            # We assume the model predicts Empty (since MedSAM only targets lesions).
-            metrics = compute_metrics(np.zeros_like(gt_mask), gt_mask)
-            inference_times.append(0.0)
-            peak_memories.append(0.0)
-            runtime_rows.append(
-                {
-                    "run_id": "medsam_zero_shot",
-                    "case_id": pid,
-                    "inference_time_seconds": 0.0,
-                    "peak_gpu_memory_mb": 0.0,
-                }
-            )
-            final_pred_np = np.zeros_like(gt_mask)
-        else:
-            # Zero-Shot Processing via MedSAM
-            
-            # Step 1: Precompute Image Embedding
-            # MedSAM handles internal resizing to 1024x1024
-            model.set_image(img_np)
-            
-            # Step 2: Predict using the generated macro bbox
-            track_result = tracked_predict(model, bbox)
-            
-            # Extract tracking
-            final_pred_np = track_result['mask'] # Returns boolean mask matched to original image np shape
-            inference_times.append(track_result['inference_time_seconds'])
-            peak_memories.append(track_result['peak_gpu_memory_mb'])
-            runtime_rows.append(
-                {
-                    "run_id": "medsam_zero_shot",
-                    "case_id": pid,
-                    "inference_time_seconds": track_result["inference_time_seconds"],
-                    "peak_gpu_memory_mb": track_result["peak_gpu_memory_mb"],
-                }
-            )
-            
-            # Compute Metrics
-            metrics = compute_metrics(final_pred_np.astype(np.uint8), gt_mask)
-            
-        # Store aggregations
+
+        track_result = tracked_predict(model, case["image_path"])
+        final_pred_np = track_result["mask"]
+        inference_times.append(track_result["inference_time_seconds"])
+        peak_memories.append(track_result["peak_gpu_memory_mb"])
+        runtime_rows.append(
+            {
+                "run_id": "medsam3_zero_shot",
+                "case_id": pid,
+                "inference_time_seconds": track_result["inference_time_seconds"],
+                "peak_gpu_memory_mb": track_result["peak_gpu_memory_mb"],
+            }
+        )
+
+        metrics = compute_metrics(final_pred_np.astype(np.uint8), gt_mask)
         results[pid] = metrics
         dice_sum += metrics['dice']
         iou_sum += metrics['iou']
@@ -142,13 +90,10 @@ def infer_medsam():
         if not np.isnan(metrics['assd']):
             assd_sum += metrics['assd']
             valid_assd_count += 1
-            
-        # Save output prediction image
         out_mask_path = os.path.join(out_dir, f"{pid}_pred.png")
         pred_pil = Image.fromarray((final_pred_np * 255).astype(np.uint8), mode="L")
         pred_pil.save(out_mask_path)
-            
-    # Finalize Report
+
     num_eval = len(results)
     if num_eval > 0:
         avg_dice = dice_sum / num_eval
@@ -158,8 +103,8 @@ def infer_medsam():
         avg_latency = float(np.mean(inference_times))
         max_mem = float(np.max(peak_memories))
         write_jsonl_log(os.path.join(out_dir, RUNTIME_LOG_FILENAME), runtime_rows)
-        
-        print("\n=== MedSAM Evaluation Complete ===")
+
+        print("\n=== MedSAM3 Evaluation Complete ===")
         print(f"Avg Dice:  {avg_dice:.4f}")
         print(f"Avg IoU:   {avg_iou:.4f}")
         print(f"Avg HD95:  {avg_hd95:.4f}")
