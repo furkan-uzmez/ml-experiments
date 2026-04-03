@@ -153,23 +153,36 @@ def build_run_specs() -> list[RunSpec]:
         )
 
     medsam_mode = medsam_config.get("mode", "zero_shot")
+    medsam_model = medsam_config["model"]
+    medsam_prompting = medsam_config.get("prompting", {})
     medsam_output_dir = Path(medsam_config["inference"]["output_dir"])
-    medsam_checkpoint = (
-        Path(medsam_config["model"]["checkpoint_dir"])
-        / medsam_config["model"]["checkpoint_name"]
+    medsam_checkpoint = Path(medsam_model["weights_path"])
+    medsam_display_name = medsam_model.get("display_name", "MedSAM3")
+    medsam_run_prefix = medsam_model.get("run_id_prefix", "medsam3")
+    medsam_backbone = medsam_model.get("backbone", "SAM3 + MedSAM3 LoRA")
+    medsam_resolution = medsam_model.get("resolution", 1008)
+    medsam_preprocessing = (
+        f"MedSAM3 text-guided preprocessing at {medsam_resolution}x{medsam_resolution}"
     )
-    medsam_backbone = f"MedSAM {medsam_config['model'].get('type', 'vit_b')}"
-    medsam_preprocessing = "MedSAM encoder preprocessing at 1024x1024"
-    medsam_threshold_policy = "decoder hard mask; probabilities not exported"
+    prompt_values = medsam_prompting.get("text_prompts") or [
+        medsam_prompting.get("default_prompt", SEGMENTATION_CLASS_NAME)
+    ]
+    prompt_summary = ", ".join(prompt_values)
+    medsam_threshold_policy = (
+        f"text prompts [{prompt_summary}]; "
+        f"score>{medsam_model.get('detection_threshold', 0.5)}; "
+        f"mask>{medsam_model.get('mask_threshold', 0.5)}; "
+        f"nms_iou<={medsam_model.get('nms_iou_threshold', 0.5)}"
+    )
 
     if medsam_mode == "fine_tuned":
         for seed in training_seeds:
             prediction_dir = medsam_output_dir / f"seed_{seed}"
             run_specs.append(
                 RunSpec(
-                    run_id=f"medsam_seed_{seed}",
+                    run_id=f"{medsam_run_prefix}_seed_{seed}",
                     experiment_group=EXPERIMENT_GROUP,
-                    model_name="MedSAM",
+                    model_name=medsam_display_name,
                     backbone=medsam_backbone,
                     task_type=task_type,
                     dataset_version=dataset_version,
@@ -193,9 +206,9 @@ def build_run_specs() -> list[RunSpec]:
     else:
         run_specs.append(
             RunSpec(
-                run_id="medsam_zero_shot",
+                run_id=f"{medsam_run_prefix}_zero_shot",
                 experiment_group=EXPERIMENT_GROUP,
-                model_name="MedSAM",
+                model_name=medsam_display_name,
                 backbone=medsam_backbone,
                 task_type=task_type,
                 dataset_version=dataset_version,

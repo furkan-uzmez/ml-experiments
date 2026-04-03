@@ -95,8 +95,8 @@ def build_runs_compared_table(run_summary: pd.DataFrame) -> str:
     ]
     rows = []
     for _, row in run_summary.sort_values(["model_name", "seed"]).iterrows():
-        if row["model_name"] == "MedSAM":
-            notes = "Prompt-conditioned inference; zero-shot unless configured otherwise."
+        if "MedSAM" in row["model_name"]:
+            notes = "Text-conditioned inference with medical concept prompts; zero-shot unless configured otherwise."
         elif row["model_name"] == "nnU-Net":
             notes = "Self-configuring pipeline; runtime not captured in this integration."
         else:
@@ -236,7 +236,7 @@ def build_figure_gallery(
         sections,
         "Learning Curves",
         "learning_curves.png",
-        "U-Net learning curves are included when epoch-level history is available; nnU-Net and zero-shot MedSAM do not expose comparable training traces in this codebase.",
+        "U-Net learning curves are included when epoch-level history is available; nnU-Net and zero-shot MedSAM3 do not expose comparable training traces in this codebase.",
     )
     add_figure_section(
         sections,
